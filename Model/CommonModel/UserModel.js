@@ -9,6 +9,10 @@ const UserSchema = mongoose.Schema({
   email: { type: String },
   password: { type: String },
   image: { type: String },
+
+  // OTP fields
+    otpHash: { type: String },
+    otpExpires: { type: Date },
 });
 
 export default mongoose.model("user", UserSchema);

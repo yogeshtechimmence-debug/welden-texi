@@ -36,7 +36,7 @@ export const UserSignUp = async (req, res) => {
 
     const userData = new User({
       id: newId,
-      type,
+      type: type.toUpperCase(),
       first_name,
       last_name,
       contact_number,
