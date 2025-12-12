@@ -1,42 +1,34 @@
 import multer from "multer";
-import path from "path";
-import fs from "fs";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import cloudinary from "../Config/cloudinary.js";
 
-/**
- * @param {String} mainFolder
- * @param {String} subFolder
- */
-const createMulter = (mainFolder, subFolder = "") => {
-  const uploadPath = subFolder
-    ? path.join(process.cwd(), "uploads", mainFolder, subFolder)
-    : path.join(process.cwd(), "uploads", mainFolder);
+// Date-time function
+const getDateTimeString = () => {
+  const now = new Date();
 
-  if (!fs.existsSync(uploadPath)) {
-    fs.mkdirSync(uploadPath, { recursive: true });
-    console.log(`Created folder: uploads/${mainFolder}/${subFolder}`);
-  }
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
 
-  const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, uploadPath),
-    filename: (req, file, cb) => {
-      const now = new Date();
-      const timestamp = `${now.getDate()}-${
-        now.getMonth() + 1
-      }-${now.getFullYear()}_${now.getHours()}-${now.getMinutes()}-${now.getSeconds()}`;
-      const cleanName = file.originalname.replace(/\s+/g, "_");
-      const uniqueName = `${mainFolder.toUpperCase()}-${timestamp}_${cleanName}`;
-      cb(null, uniqueName);
-    },
-  });
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  const seconds = String(now.getSeconds()).padStart(2, "0");
 
-  const fileFilter = (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|webp/;
-    const ext = path.extname(file.originalname).toLowerCase();
-    if (allowedTypes.test(ext)) cb(null, true);
-    else cb(new Error("Only images (jpeg, jpg, png, webp) are allowed"));
-  };
-
-  return multer({ storage, fileFilter });
+  return `${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
 };
 
-export default createMulter;
+
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: async (req, file) => {
+    return {
+      folder: "image",
+      resource_type: "auto",
+      allowed_formats: ["jpg", "jpeg", "png"],
+      public_id: `${getDateTimeString()}_${file.originalname}`,
+    };
+  },
+});
+
+const upload = multer({ storage });
+export default upload;
